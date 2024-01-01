@@ -1,37 +1,29 @@
 package main
 
 import (
+	"errors"
 	"html/template"
+	"io/fs"
+	"log"
 	"net/http"
 	"path/filepath"
 )
 
 func main() {
-	http.HandleFunc("/layout/", getWithLayout)
 	http.HandleFunc("/", get)
 
 	err := http.ListenAndServe(":6969", nil)
 	if err != nil {
-		panic(err)
-	}
-}
-
-func getWithLayout(w http.ResponseWriter, r *http.Request) {
-	t, err := getPathTemplate(r.URL.Path, "layout.gohtml")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = t.Execute(w, nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.Fatal(err)
 	}
 }
 
 func get(w http.ResponseWriter, r *http.Request) {
-	t, err := getPathTemplate(r.URL.Path, "")
+	t, err := requestTemplate(r)
+	if errors.Is(err, fs.ErrNotExist) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -44,12 +36,13 @@ func get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getPathTemplate(path string, layout string) (*template.Template, error) {
-	base := filepath.Base(path) + ".gohtml"
+func requestTemplate(r *http.Request) (*template.Template, error) {
+	base := filepath.Base(r.URL.Path) + ".gohtml"
+	dir := "templates" + filepath.Dir(r.URL.Path) + "/"
 
-	if layout == "" {
-		return template.New(base).ParseFiles("templates/" + base)
+	if base[0] == '_' {
+		return template.New(base).ParseFiles(dir + base)
 	} else {
-		return template.New(layout).ParseFiles("templates/"+layout, "templates/"+base)
+		return template.New("_layout.gohtml").ParseFiles(dir+"_layout.gohtml", dir+base)
 	}
 }
