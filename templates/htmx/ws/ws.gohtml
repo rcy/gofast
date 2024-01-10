@@ -1,0 +1,12 @@
+{{define "main"}}
+  <div hx-ext="ws" ws-connect="/subscribe">
+    <div id="notifications"></div>
+    {{template "form" .}}
+  </div>
+{{end}}
+
+{{define "form"}}
+  <form id="form" hx-post="/publish">
+    <input name="chat_message" placeholder="say something">
+  </form>
+{{end}}

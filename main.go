@@ -7,10 +7,13 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"simplegohtmx/ws"
 )
 
 func main() {
 	http.HandleFunc("/", get)
+	http.HandleFunc("/subscribe", ws.Subscribe)
+	http.HandleFunc("/publish", ws.Publish)
 
 	err := http.ListenAndServe(":6969", nil)
 	if err != nil {
