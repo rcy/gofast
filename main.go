@@ -15,6 +15,7 @@ func main() {
 	http.HandleFunc("/subscribe", ws.Subscribe)
 	http.HandleFunc("/publish", ws.Publish)
 
+	log.Println("listening on http://localhost:6969")
 	err := http.ListenAndServe(":6969", nil)
 	if err != nil {
 		log.Fatal(err)
@@ -40,7 +41,12 @@ func get(w http.ResponseWriter, r *http.Request) {
 }
 
 func requestTemplate(r *http.Request) (*template.Template, error) {
-	base := filepath.Base(r.URL.Path) + ".gohtml"
+	base := filepath.Base(r.URL.Path)
+	log.Println("base", base)
+	if base == "/" {
+		base = "index"
+	}
+	base += ".gohtml"
 	dir := "templates" + filepath.Dir(r.URL.Path) + "/"
 
 	if base[0] == '_' {
